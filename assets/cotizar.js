@@ -351,13 +351,6 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(resultado.error || "No se pudo enviar la solicitud. Intenta de nuevo.");
       }
 
-      msg.className = "form-msg ok";
-      msg.textContent =
-        "¡Listo! Tu solicitud quedó registrada con el número #" +
-        resultado.consecutivo +
-        ". Te contactaremos pronto. También puedes continuar por WhatsApp para agilizar la respuesta.";
-      submitBtn.textContent = "Enviado";
-
       var waBtn = document.getElementById("wa-continuar");
       if (waBtn) {
         var lineas = [
@@ -369,13 +362,26 @@ document.addEventListener("DOMContentLoaded", function () {
           "Quisiera recibir información sobre mi cotización.",
         ].filter(Boolean);
         waBtn.href = "https://wa.me/" + BRAND.whatsapp + "?text=" + encodeURIComponent(lineas.join("\n"));
-        waBtn.style.display = "inline-flex";
       }
+
+      // Salir del formulario y mostrar la pantalla de confirmación
+      var primerNombre = (nombre || "").split(" ")[0];
+      var textoConfirmacion = document.getElementById("confirmacion-texto");
+      if (textoConfirmacion) {
+        textoConfirmacion.textContent =
+          "Gracias" + (primerNombre ? ", " + primerNombre : "") + ". Tu solicitud quedó registrada con el número #" +
+          resultado.consecutivo +
+          ". Estaremos en contacto contigo pronto para continuar con tu cotización.";
+      }
+      document.querySelector(".wizard-progress").hidden = true;
+      document.querySelector(".wizard-card").hidden = true;
+      document.getElementById("confirmacion").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       msg.className = "form-msg error";
       msg.textContent = err.message || "Ocurrió un error al enviar la solicitud. Intenta de nuevo o escríbenos por WhatsApp.";
       submitBtn.disabled = false;
-      submitBtn.textContent = "Ver resumen →";
+      submitBtn.textContent = "Enviar solicitud →";
     }
   });
 
