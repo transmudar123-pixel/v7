@@ -163,11 +163,19 @@ document.addEventListener("DOMContentLoaded", function () {
   var fotosContador = document.getElementById("fotos-contador");
   if (fotosInput) {
     fotosInput.addEventListener("change", function () {
-      estado.fotos = Array.from(fotosInput.files);
+      var MAX_FOTOS = 8;
+      var seleccionadas = Array.from(fotosInput.files);
+      var excedente = seleccionadas.length > MAX_FOTOS;
+      estado.fotos = seleccionadas.slice(0, MAX_FOTOS);
       if (fotosContador) {
-        fotosContador.textContent = estado.fotos.length
-          ? estado.fotos.length + " foto(s) seleccionada(s)"
-          : "";
+        if (!estado.fotos.length) {
+          fotosContador.textContent = "";
+        } else if (excedente) {
+          fotosContador.textContent =
+            "Máximo " + MAX_FOTOS + " fotos. Se tomaron las primeras " + MAX_FOTOS + " de " + seleccionadas.length + " seleccionadas.";
+        } else {
+          fotosContador.textContent = estado.fotos.length + " de " + MAX_FOTOS + " foto(s) seleccionada(s)";
+        }
       }
     });
   }
