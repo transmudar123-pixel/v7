@@ -302,6 +302,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
+    var loading = document.getElementById("wizard-loading");
+    if (loading) loading.hidden = false;
+    document.querySelectorAll(".wizard-atras").forEach(function (b) { b.disabled = true; });
 
     try {
       // Comprimir y convertir las fotos a base64 para enviarlas al Apps Script
@@ -382,6 +385,8 @@ document.addEventListener("DOMContentLoaded", function () {
       msg.textContent = err.message || "Ocurrió un error al enviar la solicitud. Intenta de nuevo o escríbenos por WhatsApp.";
       submitBtn.disabled = false;
       submitBtn.textContent = "Enviar solicitud →";
+      if (loading) loading.hidden = true;
+      document.querySelectorAll(".wizard-atras").forEach(function (b) { b.disabled = false; });
     }
   });
 
