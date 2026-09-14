@@ -376,6 +376,17 @@ fieldset legend { padding: 0 8px; font-weight: 700; font-size: 15px; color: var(
 
 /* Inventario con contadores */
 .inv-titulo { margin-top: 28px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--mint-deep); }
+
+/* Lista de televisores */
+.tv-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.tv-fila {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px;
+}
+.tv-fila .tv-quitar {
+  background: none; border: none; color: #c3535a; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px;
+}
+.tv-form { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px; background: var(--surface); }
 .inv-grid { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 12px; }
 @media (min-width: 640px) { .inv-grid { grid-template-columns: 1fr 1fr; } }
 .inv-item {

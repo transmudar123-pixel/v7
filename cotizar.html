@@ -271,8 +271,36 @@
       </div>
 
       <p class="inv-titulo">Televisores</p>
-      <div class="inv-grid" data-grupo="televisores" style="grid-template-columns:1fr;">
-        <div class="inv-item" data-item="Televisores">Televisores</div>
+      <div id="tv-lista" class="tv-lista"></div>
+      <button type="button" id="tv-agregar-btn" class="btn btn-outline-navy" style="margin-top:10px;">+ Agregar televisor</button>
+      <div id="tv-form" class="tv-form" hidden>
+        <div class="row-2">
+          <div class="field">
+            <label for="tv-tamano">Tamaño (pulgadas)</label>
+            <select id="tv-tamano">
+              <option value="32''">32''</option>
+              <option value="40''">40''</option>
+              <option value="43''">43''</option>
+              <option value="50''">50''</option>
+              <option value="55''">55''</option>
+              <option value="60''">60''</option>
+              <option value="65''">65''</option>
+              <option value="70'' o más">70'' o más</option>
+              <option value="No sé">No sé</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>¿Está instalado en pared?</label>
+            <div class="pill-group" data-campo="tv_pared">
+              <button type="button" class="pill-btn" data-valor="Sí">Sí</button>
+              <button type="button" class="pill-btn" data-valor="No">No</button>
+            </div>
+          </div>
+        </div>
+        <div class="wizard-nav" style="margin-top:14px;">
+          <button type="button" id="tv-cancelar-btn" class="btn btn-outline-navy">Cancelar</button>
+          <button type="button" id="tv-confirmar-btn" class="btn btn-navy">Agregar a la lista</button>
+        </div>
       </div>
 
       <p class="inv-titulo">Elementos especiales</p>

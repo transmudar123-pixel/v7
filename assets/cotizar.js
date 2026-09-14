@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fechaEstimada: "",
     horarioPreferido: null,
     fotos: [],
+    televisores: [],
   };
 
   // ---------- Construir contadores del inventario ----------
@@ -100,6 +101,66 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   });
+
+  // ---------- Televisores (lista con tamaño y si están en pared) ----------
+  var tvLista = document.getElementById("tv-lista");
+  var tvAgregarBtn = document.getElementById("tv-agregar-btn");
+  var tvForm = document.getElementById("tv-form");
+  var tvCancelarBtn = document.getElementById("tv-cancelar-btn");
+  var tvConfirmarBtn = document.getElementById("tv-confirmar-btn");
+  var tvParedSeleccion = null;
+
+  function pintarListaTv() {
+    if (!tvLista) return;
+    tvLista.innerHTML = "";
+    estado.televisores.forEach(function (tv, indice) {
+      var fila = document.createElement("div");
+      fila.className = "tv-fila";
+      var texto = document.createElement("span");
+      texto.textContent = "TV " + (indice + 1) + " — " + tv.tamano + (tv.pared === "Sí" ? " (en pared)" : tv.pared === "No" ? " (no en pared)" : "");
+      var quitar = document.createElement("button");
+      quitar.type = "button";
+      quitar.className = "tv-quitar";
+      quitar.setAttribute("aria-label", "Quitar");
+      quitar.textContent = "×";
+      quitar.addEventListener("click", function () {
+        estado.televisores.splice(indice, 1);
+        pintarListaTv();
+      });
+      fila.appendChild(texto);
+      fila.appendChild(quitar);
+      tvLista.appendChild(fila);
+    });
+  }
+
+  if (tvAgregarBtn && tvForm) {
+    tvAgregarBtn.addEventListener("click", function () {
+      tvForm.hidden = false;
+      tvAgregarBtn.hidden = true;
+    });
+    tvCancelarBtn.addEventListener("click", function () {
+      tvForm.hidden = true;
+      tvAgregarBtn.hidden = false;
+      tvParedSeleccion = null;
+      tvForm.querySelectorAll(".pill-btn").forEach(function (b) { b.classList.remove("active"); });
+    });
+    tvForm.querySelectorAll('[data-campo="tv_pared"] .pill-btn').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        tvForm.querySelectorAll('[data-campo="tv_pared"] .pill-btn').forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        tvParedSeleccion = btn.dataset.valor;
+      });
+    });
+    tvConfirmarBtn.addEventListener("click", function () {
+      var tamano = document.getElementById("tv-tamano").value;
+      estado.televisores.push({ tamano: tamano, pared: tvParedSeleccion || "No sé" });
+      pintarListaTv();
+      tvForm.hidden = true;
+      tvAgregarBtn.hidden = false;
+      tvParedSeleccion = null;
+      tvForm.querySelectorAll(".pill-btn").forEach(function (b) { b.classList.remove("active"); });
+    });
+  }
 
   // ---------- Elementos especiales (checkboxes) ----------
   var elementosEspecialesBox = document.getElementById("elementos-especiales");
@@ -256,6 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       inventarioFinal["¿Alguna cama requiere desarme?"] = estado.desarmeCamas;
       inventarioFinal["Elementos especiales"] = estado.elementosEspeciales;
+      inventarioFinal["Televisores"] = estado.televisores;
 
       var payload = {
         nombre: nombre,
