@@ -1,4 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
+  /**
+   * Reduce el tamaño de la foto (para que el envío sea rápido) y la
+   * convierte a base64, en el formato que espera el Apps Script.
+   */
+  function comprimirYConvertirABase64(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var lector = new FileReader();
+      lector.onerror = reject;
+      lector.onload = function () {
+        img.onload = function () {
+          var maxLado = 1280;
+          var w = img.width;
+          var h = img.height;
+          if (Math.max(w, h) > maxLado) {
+            var escala = maxLado / Math.max(w, h);
+            w = Math.round(w * escala);
+            h = Math.round(h * escala);
+          }
+          var canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          var dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+          resolve({
+            nombre: (file.name || "foto.jpg").replace(/[^a-zA-Z0-9._-]/g, "_"),
+            tipo: "image/jpeg",
+            base64: dataUrl.split(",")[1],
+          });
+        };
+        img.onerror = reject;
+        img.src = lector.result;
+      };
+      lector.readAsDataURL(file);
+    });
+  }
   var TOTAL_PASOS = 5;
   var pasoActual = 1;
   var titulos = {
@@ -199,25 +235,10 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.textContent = "Enviando...";
 
     try {
-      // Subir fotos
-      var rutasFotos = [];
-      if (estado.fotos.length) {
-        var carpeta = crypto.randomUUID();
-        for (var i = 0; i < estado.fotos.length; i++) {
-          var file = estado.fotos[i];
-          var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-          var ruta = carpeta + "/" + Date.now() + "-" + i + "." + ext;
-          var up = await fetch(SUPABASE_URL + "/storage/v1/object/cotizaciones/" + ruta, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_PUBLISHABLE_KEY,
-              Authorization: "Bearer " + SUPABASE_PUBLISHABLE_KEY,
-              "Content-Type": file.type || "image/jpeg",
-            },
-            body: file,
-          });
-          if (up.ok) rutasFotos.push(ruta);
-        }
+      // Comprimir y convertir las fotos a base64 para enviarlas al Apps Script
+      var fotosBase64 = [];
+      for (var i = 0; i < estado.fotos.length; i++) {
+        fotosBase64.push(await comprimirYConvertirABase64(estado.fotos[i]));
       }
 
       // Inventario: solo los items con cantidad > 0
@@ -243,33 +264,34 @@ document.addEventListener("DOMContentLoaded", function () {
         fecha_estimada: estado.fechaEstimada || null,
         horario_preferido: estado.horarioPreferido,
         observaciones: observaciones,
-        fotos: rutasFotos,
+        fotos: fotosBase64,
       };
 
-      var res = await fetch(SUPABASE_URL + "/rest/v1/solicitudes_cotizacion", {
+      // Se envía como text/plain a propósito: si se declara application/json,
+      // el navegador hace una petición de verificación previa (CORS preflight)
+      // que Apps Script no responde correctamente y el envío fallaría.
+      var res = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
-        headers: {
-          apikey: SUPABASE_PUBLISHABLE_KEY,
-          Authorization: "Bearer " + SUPABASE_PUBLISHABLE_KEY,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        var errText = await res.text();
-        throw new Error("No se pudo enviar la solicitud (" + res.status + "). " + errText);
+      var resultado = await res.json();
+      if (!resultado.ok) {
+        throw new Error(resultado.error || "No se pudo enviar la solicitud. Intenta de nuevo.");
       }
 
       msg.className = "form-msg ok";
-      msg.textContent = "¡Listo! Recibimos tu solicitud. Te contactaremos pronto. También puedes continuar por WhatsApp para agilizar la respuesta.";
+      msg.textContent =
+        "¡Listo! Tu solicitud quedó registrada con el número #" +
+        resultado.consecutivo +
+        ". Te contactaremos pronto. También puedes continuar por WhatsApp para agilizar la respuesta.";
       submitBtn.textContent = "Enviado";
 
       var waBtn = document.getElementById("wa-continuar");
       if (waBtn) {
         var lineas = [
-          "Hola TRANSMUDAR. Acabo de solicitar una cotización desde la página web.",
+          "Hola TRANSMUDAR. Acabo de solicitar una cotización desde la página web (#" + resultado.consecutivo + ").",
           "Nombre: " + nombre,
           "Origen: " + (estado.origen.ciudad || ""),
           "Destino: " + (estado.destino.ciudad || ""),
